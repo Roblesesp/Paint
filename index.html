@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Herramienta de Diseño Gráfico</title>
+  <style>
+    *{
+      box-sizing: border-box;
+    }
+    html{
+      height: 100%;
+    }
+   body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f1f1f1;
+    }
+
+    .container {
+      width: 60%;
+      margin: auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    canvas {
+      display: block;
+      margin: 0;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
+
+    input[type="color"],
+    input[type="number"],
+    select {
+      margin: 2px;
+      padding: 2px;
+      max-width: 150px;
+    }
+
+    button {
+      padding: 5px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #formatMessage {
+      text-align: center;
+      width: 100%;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    @media screen and (max-width: 680px) {
+      .container {
+        width: 90%;
+        padding: 0px;
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+ <div class="container">
+    <h1>Paint</h1>
+    <div>
+      <label for="backgroundColorPicker">Color de Fondo:</label>
+      <input type="color" id="backgroundColorPicker">
+    </div>
+    <canvas id="canvas" ></canvas>
+    <div>
+      <label for="colorPicker">Color de Pinzel</label>
+      <input type="color" id="colorPicker">
+      <label for="brushSize">Grozor</label>
+      <input type="number" id="brushSize" min="1" max="50" value="5">
+      <select id="downloadSelect">
+        <option value="">Elegir formato de descarga</option>
+        <option value="jpg">JPG</option>
+        <option value="png">PNG</option>
+        <option value="gif">GIF</option>
+        <option value="ico">ICO</option>
+        <option value="pdf">PDF</option>
+      </select>
+      <button id="downloadBtn">Descargar</button>
+    </div>
+    <div id="formatMessage">Elegir formato para descargar:</div>
+    <div>
+      <input type="file" id="imagePicker">
+      <input type="number" id="imageSize" min="10" max="200" value="100">
+      <input type="number" id="imageX" min="0" max="800" value="0">
+      <input type="number" id="imageY" min="0" max="500" value="0">
+      <button id="addImageButton">Añadir Imagen</button>
+    </div>
+    
+  </div>
+
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let brushColor = '#000000';
+    let brushSize = 5;
+    let backgroundColor = '#ffffff';
+
+    function getCanvasCoordinates(e) {
+      const canvasRect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / canvasRect.width;
+      const scaleY = canvas.height / canvasRect.height;
+      const canvasX = (e.clientX - canvasRect.left) * scaleX;
+      const canvasY = (e.clientY - canvasRect.top) * scaleY;
+      return { x: canvasX, y: canvasY };
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      const { x, y } = getCanvasCoordinates(e);
+      [lastX, lastY] = [x, y];
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const { x, y } = getCanvasCoordinates(e);
+      ctx.strokeStyle = brushColor;
+      ctx.lineWidth = brushSize;
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      [lastX, lastY] = [x, y];
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    document.getElementById('colorPicker').addEventListener('change', function() {
+      brushColor = this.value;
+    });
+
+    document.getElementById('brushSize').addEventListener('change', function() {
+      brushSize = parseInt(this.value);
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+      const formatMessage = document.getElementById('formatMessage');
+      formatMessage.style.display = 'block';
+
+      const downloadSelect = document.getElementById('downloadSelect');
+      const downloadFormat = downloadSelect.value;
+      
+      if (!downloadFormat) {
+        formatMessage.innerText = 'Por favor, elige un formato de descarga.';
+        return;
+      }
+
+      formatMessage.innerText = `Descargando en formato ${downloadFormat.toUpperCase()}...`;
+      setTimeout(function() {
+        formatMessage.style.display = 'none';
+        downloadCanvas(downloadFormat);
+      }, 2000);
+    });
+
+    function downloadCanvas(format) {
+      const downloadLink = document.createElement('a');
+      if (format === 'pdf') {
+        downloadLink.href = canvas.toDataURL('image/png');
+        downloadLink.download = 'dibujo.png';
+      } else {
+        downloadLink.href = canvas.toDataURL(`image/${format}`);
+        downloadLink.download = `dibujo.${format}`;
+      }
+      downloadLink.click();
+    }
+
+    const imagePicker = document.getElementById('imagePicker');
+    const imageX = document.getElementById('imageX');
+    const imageY = document.getElementById('imageY');
+    const imageSize = document.getElementById('imageSize');
+
+    let image = null;
+
+    imagePicker.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function() {
+          const img = new Image();
+          img.onload = function() {
+            image = img;
+            drawImageOnCanvas();
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function drawImageOnCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (backgroundColor) {
+        ctx.fillStyle = backgroundColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      if (image) {
+        ctx.drawImage(image, parseInt(imageX.value), parseInt(imageY.value), parseInt(imageSize.value), parseInt(imageSize.value));
+      }
+    }
+
+    document.getElementById('addImageButton').addEventListener('click', drawImageOnCanvas);
+
+    document.getElementById('backgroundColorPicker').addEventListener('change', function() {
+      backgroundColor = this.value;
+      drawImageOnCanvas();
+    });
+  </script>
+</body>
+</html>

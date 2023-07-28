@@ -82,11 +82,11 @@
       <label for="backgroundColorPicker">Color de Fondo:</label>
       <input type="color" id="backgroundColorPicker">
     </div>
-    <canvas id="canvas" ></canvas>
+    <canvas id="canvas"></canvas>
     <div>
-      <label for="colorPicker">Color de Pinzel</label>
+      <label for="colorPicker">Color de Pincel</label>
       <input type="color" id="colorPicker">
-      <label for="brushSize">Grozor</label>
+      <label for="brushSize">Grosor</label>
       <input type="number" id="brushSize" min="1" max="50" value="5">
       <select id="downloadSelect">
         <option value="">Elegir formato de descarga</option>
@@ -106,12 +106,11 @@
       <input type="number" id="imageY" min="0" max="500" value="0">
       <button id="addImageButton">Añadir Imagen</button>
     </div>
-    
   </div>
 
 
   <script>
-    const canvas = document.getElementById('canvas');
+const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
     let isDrawing = false;
@@ -130,15 +129,35 @@
       return { x: canvasX, y: canvasY };
     }
 
+    // Función para obtener las coordenadas en el canvas para eventos táctiles o de mouse
+    function getCanvasCoordinatesTouchOrMouse(e) {
+      if (e.type.startsWith('touch')) {
+        // Evento táctil
+        const canvasRect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / canvasRect.width;
+        const scaleY = canvas.height / canvasRect.height;
+        const canvasX = (e.touches[0].clientX - canvasRect.left) * scaleX;
+        const canvasY = (e.touches[0].clientY - canvasRect.top) * scaleY;
+        return { x: canvasX, y: canvasY };
+      } else {
+        // Evento de mouse
+        return getCanvasCoordinates(e);
+      }
+    }
+
     function startDrawing(e) {
       isDrawing = true;
-      const { x, y } = getCanvasCoordinates(e);
+      const { x, y } = getCanvasCoordinatesTouchOrMouse(e);
       [lastX, lastY] = [x, y];
     }
 
+    // Evento para iniciar el dibujo en dispositivos táctiles o de mouse
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('touchstart', startDrawing);
+
     function draw(e) {
       if (!isDrawing) return;
-      const { x, y } = getCanvasCoordinates(e);
+      const { x, y } = getCanvasCoordinatesTouchOrMouse(e);
       ctx.strokeStyle = brushColor;
       ctx.lineWidth = brushSize;
       ctx.beginPath();
@@ -148,14 +167,18 @@
       [lastX, lastY] = [x, y];
     }
 
+    // Evento para dibujar en dispositivos táctiles o de mouse
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('touchmove', draw);
+
     function stopDrawing() {
       isDrawing = false;
     }
 
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
+    // Evento para detener el dibujo en dispositivos táctiles o de mouse
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseout', stopDrawing);
+    canvas.addEventListener('touchend', stopDrawing);
 
     document.getElementById('colorPicker').addEventListener('change', function() {
       brushColor = this.value;

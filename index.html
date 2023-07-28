@@ -110,7 +110,7 @@
 
 
   <script>
-const canvas = document.getElementById('canvas');
+    const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
     let isDrawing = false;
@@ -129,10 +129,8 @@ const canvas = document.getElementById('canvas');
       return { x: canvasX, y: canvasY };
     }
 
-    // Función para obtener las coordenadas en el canvas para eventos táctiles o de mouse
     function getCanvasCoordinatesTouchOrMouse(e) {
       if (e.type.startsWith('touch')) {
-        // Evento táctil
         const canvasRect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / canvasRect.width;
         const scaleY = canvas.height / canvasRect.height;
@@ -140,7 +138,6 @@ const canvas = document.getElementById('canvas');
         const canvasY = (e.touches[0].clientY - canvasRect.top) * scaleY;
         return { x: canvasX, y: canvasY };
       } else {
-        // Evento de mouse
         return getCanvasCoordinates(e);
       }
     }
@@ -151,7 +148,6 @@ const canvas = document.getElementById('canvas');
       [lastX, lastY] = [x, y];
     }
 
-    // Evento para iniciar el dibujo en dispositivos táctiles o de mouse
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('touchstart', startDrawing);
 
@@ -167,7 +163,6 @@ const canvas = document.getElementById('canvas');
       [lastX, lastY] = [x, y];
     }
 
-    // Evento para dibujar en dispositivos táctiles o de mouse
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('touchmove', draw);
 
@@ -175,7 +170,6 @@ const canvas = document.getElementById('canvas');
       isDrawing = false;
     }
 
-    // Evento para detener el dibujo en dispositivos táctiles o de mouse
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseout', stopDrawing);
     canvas.addEventListener('touchend', stopDrawing);
@@ -194,7 +188,7 @@ const canvas = document.getElementById('canvas');
 
       const downloadSelect = document.getElementById('downloadSelect');
       const downloadFormat = downloadSelect.value;
-      
+
       if (!downloadFormat) {
         formatMessage.innerText = 'Por favor, elige un formato de descarga.';
         return;
@@ -212,7 +206,7 @@ const canvas = document.getElementById('canvas');
       if (format === 'pdf') {
         downloadLink.href = canvas.toDataURL('image/png');
         downloadLink.download = 'dibujo.png';
-      } else {
+      }  else {
         downloadLink.href = canvas.toDataURL(`image/${format}`);
         downloadLink.download = `dibujo.${format}`;
       }
@@ -262,3 +256,4 @@ const canvas = document.getElementById('canvas');
   </script>
 </body>
 </html>
+
